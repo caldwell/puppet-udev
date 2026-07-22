@@ -6,27 +6,27 @@ class udev::params {
   $config_file_replace = true
 
   $udev_log     = 'err'
-  $udevadm_path = '/sbin'
+  $udevadm_path = ['/sbin', '/usr/sbin', '/bin', '/usr/bin']
   $rules        = undef
 
-  case $::osfamily {
+  case $facts['os']['family'] {
     'debian': {
       $udev_package    = 'udev'
       $udevlogpriority = 'udevadm control --log-priority'
       $udevtrigger     = 'udevadm trigger --action=change'
     }
     'redhat': {
-      if $::operatingsystem == 'Fedora' {
-        if (versioncmp($::operatingsystemmajrelease,'20') >=0) {
+      if $facts['os']['name'] == 'Fedora' {
+        if (versioncmp($facts['os']['release']['major'],'20') >=0) {
           $udev_package    = 'systemd'
           $udevtrigger     = 'udevadm trigger'
           $udevlogpriority = 'udevadm control --log-priority'
         }
         else {
-          fail("Module ${module_name} might not be supported on Fedora release ${::operatingsystemmajrelease}")
+          fail("Module ${module_name} might not be supported on Fedora release ${facts['os']['release']['major']}")
         }
       } else {
-        case $::operatingsystemmajrelease {
+        case $facts['os']['release']['major'] {
           '5': {
             $udev_package    = 'udev'
             $udevtrigger     = 'udevtrigger'
@@ -43,13 +43,13 @@ class udev::params {
             $udevlogpriority = 'udevadm control --log-priority'
           }
           default: {
-            fail("Module ${module_name} is not supported on RedHat release ${::operatingsystemmajrelease}")
+            fail("Module ${module_name} is not supported on RedHat release ${facts['os']['release']['major']}")
           }
         }
       }
     }
     default: {
-      fail("Module ${module_name} is not supported on ${::operatingsystem}")
+      fail("Module ${module_name} is not supported on ${facts['os']['name']}")
     }
   }
 }

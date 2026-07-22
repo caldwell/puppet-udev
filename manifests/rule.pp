@@ -39,11 +39,10 @@
 # === Example
 #
 define udev::rule(
-  $ensure  = present,
-  $content = undef,
-  $source  = undef
+  Enum[present,absent] $ensure  = present,
+  Optional[String] $content = undef,
+  Optional[String] $source  = undef
 ) {
-  validate_re($ensure, '^present$|^absent$')
 
   include udev
 
@@ -57,15 +56,11 @@ define udev::rule(
     notify => Class['udev::udevadm::trigger'],
   }
   if $source {
-    validate_string($source)
-
     if $content {
       fail("${title}: parameters \$source and \$content are mutually exclusive")
     }
     $config_content = { source => $source }
   } elsif $content {
-    validate_string($content)
-
     if $source {
       fail("${title}: parameters \$source and \$content are mutually exclusive")
     }
@@ -79,7 +74,7 @@ define udev::rule(
     }
   }
 
-  $config = merge($config_base, $config_content)
+  $config = $config_base + $config_content
 
   create_resources( 'file', { "/etc/udev/rules.d/${title}" => $config } )
 
